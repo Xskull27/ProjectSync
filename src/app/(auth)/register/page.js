@@ -82,7 +82,7 @@ const Register = () => {
         role: values.role,
         password: values.password,
         confirm_password: values.confirm_password,
-        is_active: true, // <-- Add this line
+        is_active: true,
       });
 
       toast({
@@ -97,15 +97,16 @@ const Register = () => {
     } catch (error) {
       console.error("Registration error:", error);
 
+      const errorMsg = error.message || error.detail || "Registration failed. Please try again.";
       toast({
         title: "Registration failed",
-        description: error.detail || "Registration failed. Please try again.",
+        description: errorMsg,
         variant: "destructive",
       });
 
       form.setError("root", {
         type: "manual",
-        message: error.detail || "Registration failed. Please try again.",
+        message: errorMsg,
       });
     }
   }

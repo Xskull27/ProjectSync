@@ -121,133 +121,6 @@ const Issues = () => {
     return [];
   };
 
-  const fetchIssuesAssignedToMe = async () => {
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/issues/my-issues`,
-        { headers: getAuthHeaders() }
-      );
-      if (res.ok) {
-        const data = await res.json();
-        // filter to get only issues assigned to the current user
-        const filteredData = data.filter(
-          (issue) => issue.assigned_to_id === user.id
-        );
-        console.log("filtered my issues", filteredData);
-        setMyIssues(filteredData);
-        return data;
-      }
-    } catch (error) {
-      console.error("Error fetching my issues:", error);
-    }
-    return [];
-  };
-
-  const fetchOpenIssues = async () => {
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/issues/open-issues`,
-        { headers: getAuthHeaders() }
-      );
-      if (res.ok) {
-        const data = await res.json();
-        console.log("status", data);
-        setOpenIssues(data);
-        return data;
-      }
-    } catch (error) {
-      console.error("Error fetching open issues:", error);
-    }
-    return [];
-  };
-  const fetchCreatedByMeIssues = async () => {
-    try {
-      // Get issues from the regular my-issues endpoint or all issues
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/issues/my-issues`,
-        { headers: getAuthHeaders() }
-      );
-      if (res.ok) {
-        const allData = await res.json();
-        console.log("all issues for filtering", allData);
-
-        // Filter to find only issues created by the current user
-        if (user && allData.length > 0) {
-          const filtered = allData.filter(
-            (issue) => issue.created_by_id === user.id
-          );
-          console.log("created by me issues (filtered)", filtered);
-          setCreatedByMeIssues(filtered);
-          return filtered;
-        }
-        setCreatedByMeIssues([]);
-        return [];
-      }
-    } catch (error) {
-      console.error("Error fetching issues created by me:", error);
-      // Fallback filtering from allIssues
-      if (allIssues.length > 0 && user) {
-        const filtered = allIssues.filter(
-          (issue) => issue.created_by_id === user.id
-        );
-        setCreatedByMeIssues(filtered);
-        return filtered;
-      }
-    }
-    return [];
-  };
-
-  // current bug: Whenever PM or user marks for compelte or review, it is not updating the completed issues list, as it only fetching the data which the curr user created (with compelted/review status) and not showing the issues assigned and completed by current user including created by curr.
-
-  const fetchCompletedIssues = async () => {
-    try {
-      // We'll use the main issues endpoint to get ALL issues first
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/issues/`,
-        { headers: getAuthHeaders() }
-      );
-
-      if (res.ok) {
-        const allData = await res.json();
-
-        // Filter to find completed/review issues that are either:
-        // 1. Created by current user OR
-        // 2. Assigned to current user
-        if (user && allData.length > 0) {
-          const filtered = allData.filter(
-            (issue) =>
-              (issue.status === "COMPLETED" || issue.status === "REVIEW") &&
-              (issue.created_by_id === user.id ||
-                issue.assigned_to_id === user.id)
-          );
-
-          console.log("completed issues (filtered from all issues)", filtered);
-          setCompletedIssues(filtered);
-          return filtered;
-        }
-
-        setCompletedIssues([]);
-        return [];
-      }
-    } catch (error) {
-      console.error("Error fetching completed issues:", error);
-
-      // Fallback: Use allIssues state if API call fails
-      if (allIssues.length > 0 && user) {
-        const filtered = allIssues.filter(
-          (issue) =>
-            (issue.status === "COMPLETED" || issue.status === "REVIEW") &&
-            (issue.created_by_id === user.id ||
-              issue.assigned_to_id === user.id)
-        );
-
-        setCompletedIssues(filtered);
-        return filtered;
-      }
-    }
-    return [];
-  };
-
   const fetchProjects = async () => {
     try {
       const res = await fetch(
@@ -265,14 +138,20 @@ const Issues = () => {
 
   const fetchUsers = async () => {
     try {
+      const headers = getAuthHeaders();
+      console.log("[DEBUG] Fetching users with headers:", headers);
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/auth/users/`,
-        { headers: getAuthHeaders() }
+        { headers }
       );
+      console.log("[DEBUG] Response status:", res.status);
       if (res.ok) {
         const data = await res.json();
         console.log("users", data);
         setUsers(data);
+      } else {
+        const errorText = await res.text();
+        console.error("[DEBUG] Error response:", errorText);
       }
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -494,36 +373,27 @@ const Issues = () => {
   const openAssignDialog = (issue) => {
     setSelectedIssue(issue);
     setIsAssignDialogOpen(true);
-  }; // Load data on component mount
+  }; 
+  
   useEffect(() => {
     if (user) {
-      // Fetch all issues first since fallback filters depend on it
-      const loadData = async () => {
-        // First fetch all issues
-        await fetchAllIssues();
-
-        // Then fetch other issue categories in parallel
-        await Promise.all([fetchIssuesAssignedToMe(), fetchOpenIssues()]);
-
-        // Then run the filters that depend on all issues
-        await fetchCreatedByMeIssues();
-        await fetchCompletedIssues();
-
-        // Fetch supporting data
-        fetchProjects();
+      refreshAllData();
+      fetchProjects();
+      if (user.role === 'PM') {
         fetchUsers();
-      };
-
-      loadData();
+      }
     }
   }, [user]);
 
   // Helper function to refresh all data in the correct sequence
   const refreshAllData = async () => {
-    await fetchAllIssues();
-    await Promise.all([fetchIssuesAssignedToMe(), fetchOpenIssues()]);
-    await fetchCreatedByMeIssues();
-    await fetchCompletedIssues();
+    const all = await fetchAllIssues();
+    if (all && user) {
+      setMyIssues(all.filter(issue => issue.assigned_to_id === user.id));
+      setOpenIssues(all.filter(issue => issue.status === 'OPEN'));
+      setCreatedByMeIssues(all.filter(issue => issue.created_by_id === user.id));
+      setCompletedIssues(all.filter(issue => (issue.status === 'COMPLETED' || issue.status === 'REVIEW') && (issue.created_by_id === user.id || issue.assigned_to_id === user.id)));
+    }
   };
 
   // Issue Card Component
@@ -876,6 +746,7 @@ const Issues = () => {
                     </div>
 
                     {/* Assigned To Filter */}
+                    {user?.role === 'PM' && (
                     <div className="space-y-2">
                       <Label>Assigned To</Label>
                       <Select
@@ -897,6 +768,7 @@ const Issues = () => {
                         </SelectContent>
                       </Select>
                     </div>
+                    )}
 
                     <Button
                       className="w-full"

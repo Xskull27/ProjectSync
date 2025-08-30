@@ -15,10 +15,13 @@ export const authAPI = {
       });
       const data = await res.json();
 
-      const detailedError = data.error;
+      const detailedError = data && data.error;
       console.log(data, detailedError);
       if (!res.ok) {
-        throw new Error(data.error.detail || "Registration failed");
+        const errorMsg = detailedError && detailedError.detail
+          ? detailedError.detail
+          : (typeof data.detail === 'string' ? data.detail : "Registration failed");
+        throw new Error(errorMsg);
       }
       return data;
     } catch (error) {
