@@ -16,7 +16,7 @@ import { useAuth } from "@/lib/authContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 
-const Navbar = () => {
+const Navbar = ({ onSidebarToggle }) => {
   const router = useRouter();
   const { user, logout, isAuthenticated } = useAuth();
   const { toast } = useToast();
@@ -38,8 +38,30 @@ const Navbar = () => {
   return (
     <nav className="fixed top-0 z-50 w-full border-b border-border/20 bg-transparent text-blue-500">
       <div className="mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* Brand */}
-        <Link href="/" className="text-xl font-bold text-blue-600">
+
+
+        {/* Sidebar toggle for mobile, only if onSidebarToggle is provided */}
+        {/* Mobile: sidebar toggle and brand, always centered, never overlap */}
+        {onSidebarToggle ? (
+          <div className="flex items-center md:hidden w-full">
+            <Button variant="ghost" size="icon" onClick={onSidebarToggle} aria-label="Open sidebar">
+              <Menu className="h-6 w-6" />
+            </Button>
+            <div className="flex-1 flex justify-center">
+              <Link href="/" className="text-xl font-bold text-blue-600">
+                
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <div className="flex md:hidden w-full justify-center">
+            <Link href="/" className="text-xl font-bold text-blue-600">
+              ProjectSync
+            </Link>
+          </div>
+        )}
+        {/* Brand for desktop (always only one brand on md+) */}
+        <Link href="/" className="text-xl font-bold text-blue-600 hidden md:block">
           ProjectSync
         </Link>
 

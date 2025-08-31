@@ -18,7 +18,7 @@ import { useAuth } from "@/lib/authContext";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 
-const Sidebar = () => {
+const Sidebar = ({ open = false, onClose }) => {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { user, logout } = useAuth();
@@ -53,52 +53,74 @@ const Sidebar = () => {
     },
   ];
 
+  // Responsive sidebar: overlay on mobile, fixed on desktop
   return (
-    <div
-      className={`h-screen border-r transition-all duration-300 ${
-        isCollapsed ? "w-16" : "w-64"
-      } flex flex-col bg-background`}
-    >
-      {/* Collapse Button */}
-      <div className="p-4 border-b flex items-center justify-between">
-        {!isCollapsed && <span className="text-lg font-bold">Welcome</span>}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-        >
-          {isCollapsed ? (
-            <ChevronRight className="h-5 w-5" />
-          ) : (
-            <ChevronLeft className="h-5 w-5" />
-          )}
-        </Button>
-      </div>
-
-      {/* Navigation Links */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="px-3 py-2">
-          <div className="space-y-1">
-            {sidebarItems.map((item) => (
-              <Link key={item.href} href={item.href}>
-                <Button
-                  variant="ghost"
-                  size={isCollapsed ? "icon" : "default"}
-                  className={`w-full justify-${
-                    isCollapsed ? "center" : "start"
-                  } ${
-                    pathname === item.href
-                      ? "bg-primary/10 text-primary hover:bg-primary/20"
-                      : "hover:bg-muted hover:text-foreground"
-                  }`}
-                >
-                  {item.icon}
-                  {!isCollapsed && <span className="ml-2">{item.name}</span>}
-                </Button>
-              </Link>
-            ))}
+    <>
+      {/* Overlay for mobile */}
+      <div
+        className={`fixed inset-0 z-40 bg-black bg-opacity-30 transition-opacity md:hidden ${open ? "block" : "hidden"}`}
+        onClick={onClose}
+        aria-hidden="true"
+      />
+      <div
+        className={`fixed top-16 left-0 bottom-0 z-50 border-r transition-all duration-300 flex flex-col bg-background h-[calc(100vh-64px)]
+          ${isCollapsed ? "w-16" : "w-64"}
+          ${open ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 md:block
+        `}
+        style={{ boxShadow: open ? "0 2px 8px rgba(0,0,0,0.15)" : undefined }}
+      >
+        {/* Collapse Button & Close for mobile */}
+        <div className="p-4 border-b flex items-center justify-between">
+          {!isCollapsed && <span className="text-lg font-bold">Welcome</span>}
+          <div className="flex gap-2">
+            {/* Mobile close button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden"
+              onClick={onClose}
+              aria-label="Close sidebar"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+            {/* Collapse button for desktop */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hidden md:inline-flex"
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              aria-label="Collapse sidebar"
+            >
+              {isCollapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
+            </Button>
           </div>
         </div>
+
+        {/* Navigation Links */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="px-3 py-2">
+            <div className="space-y-1">
+              {sidebarItems.map((item) => (
+                <Link key={item.href} href={item.href}>
+                  <Button
+                    variant="ghost"
+                    size={isCollapsed ? "icon" : "default"}
+                    className={`w-full justify-${
+                      isCollapsed ? "center" : "start"
+                    } ${
+                      pathname === item.href
+                        ? "bg-primary/10 text-primary hover:bg-primary/20"
+                        : "hover:bg-muted hover:text-foreground"
+                    }`}
+                    onClick={onClose} // close sidebar on mobile after click
+                  >
+                    {item.icon}
+                    {!isCollapsed && <span className="ml-2">{item.name}</span>}
+                  </Button>
+                </Link>
+              ))}
+            </div>
+          </div>
         {/* User Info */}
         <div className="p-4 border-t mt-auto space-y-3">
           {!isCollapsed && user && (
@@ -126,7 +148,8 @@ const Sidebar = () => {
           </Button>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 

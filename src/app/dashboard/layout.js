@@ -1,7 +1,9 @@
+"use client";
 import { Roboto_Mono } from "next/font/google";
 import "./../globals.css";
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
+import { useState } from "react";
 import Footer from "@/components/Footer";
 import { AuthProvider } from "@/lib/authContext";
 import { Toaster } from "@/components/ui/toaster";
@@ -13,12 +15,9 @@ const roboto = Roboto_Mono({
   variable: "--font-roboto-mono",
 });
 
-export const metadata = {
-  title: "ProjectSync - Project and Issue Management Tool",
-  description: "An advanced Project and Issue Management Tool",
-};
 
 export default function DashboardLayout({ children }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Fixed Navbar at top */}
@@ -26,14 +25,14 @@ export default function DashboardLayout({ children }) {
         <Navbar />
       </div>
 
-      {/* Fixed Sidebar */}
-      <div className="fixed top-16 left-0 bottom-0 z-40 overflow-y-auto">
-        <Sidebar />
+      {/* Sidebar: overlay on mobile, fixed on desktop */}
+      <div>
+        <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       </div>
 
       {/* Main content area - scrollable */}
       <div className="flex flex-col w-full pt-16">
-        <main className="flex-1 ml-64 p-4 md:p-6 overflow-y-auto h-[calc(100vh-64px)]">
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto h-[calc(100vh-64px)] transition-all duration-300 md:ml-64" style={{ marginLeft: sidebarOpen ? 0 : undefined }}>
           {children}
         </main>
       </div>
