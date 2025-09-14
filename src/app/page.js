@@ -17,15 +17,15 @@ export default function Home() {
         {/* Left Content */}
         <div className="flex-1 w-full md:w-1/2 flex flex-col justify-center items-start text-left py-10 md:py-16">
           <div className="bg-gray-900/80 text-white px-4 py-1 border border-blue-600/50 rounded-full text-xs sm:text-sm font-medium mb-4 shadow-md">
-            ProjectSync
+            LetsDoIt
           </div>
 
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-extrabold tracking-tight leading-tight mb-6 drop-shadow-xl">
-            Manage your <span className="text-blue-500">Projects</span> and <span className="text-purple-500">Issues</span> seamlessly
+            Manage your <span className="text-purple-500">Projects</span> and <span className="text-blue-500">Issues</span> seamlessly
           </h1>
 
           <p className="text-base sm:text-lg md:text-xl text-gray-200 mb-8 max-w-xl md:max-w-2xl">
-            Streamline your development workflow and manage your team’s projects and issues more efficiently with our powerful tool.
+           Optimize your development workflow and easily handle your team’s tasks and projects using our advanced management tool.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
@@ -35,8 +35,8 @@ export default function Home() {
               </h2>
             ) : (
               <Link href="/register" passHref>
-                <Button className="px-8 py-3 text-base sm:text-lg font-semibold rounded-full bg-blue-600 hover:bg-blue-700 transition-colors w-full sm:w-auto shadow-lg">
-                  Get Started
+                <Button className="px-8 py-3 text-base sm:text-lg font-semibold rounded-full bg-purple-600 hover:bg-blue-700 transition-colors w-full sm:w-auto shadow-lg">
+                  Register Now
                 </Button>
               </Link>
             )}

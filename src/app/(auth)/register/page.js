@@ -1,6 +1,20 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
+// Password strength checker
+function getPasswordStrength(password) {
+  let score = 0;
+  if (password.length >= 8) score++;
+  if (/[A-Z]/.test(password)) score++;
+  if (/[a-z]/.test(password)) score++;
+  if (/[0-9]/.test(password)) score++;
+  if (/[^A-Za-z0-9]/.test(password)) score++;
+  if (score <= 2) return { label: "Weak", color: "text-red-500" };
+  if (score === 3 || score === 4) return { label: "Medium", color: "text-yellow-500" };
+  if (score === 5) return { label: "Strong", color: "text-green-600" };
+  return { label: "", color: "" };
+}
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -57,6 +71,9 @@ const formSchema = z
   });
 
 const Register = () => {
+  const [passwordValue, setPasswordValue] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
   const router = useRouter();
   const { register: registerUser, error } = useAuth();
   const { toast } = useToast();
@@ -121,7 +138,7 @@ const Register = () => {
           style={{ objectFit: "cover" }}
           priority
         />
-        <div className="absolute inset-0 bg-primary/30 flex items-center justify-center">
+        {/* <div className="absolute inset-0 bg-primary/30 flex items-center justify-center">
           <div className="text-white max-w-md p-8">
             <h1 className="text-3xl font-bold mb-4">Track Bugs Effectively</h1>
             <p className="text-xl">
@@ -129,7 +146,7 @@ const Register = () => {
               manage issues efficiently.
             </p>
           </div>
-        </div>
+        </div> */}
       </div>
 
       <div className="w-full md:w-1/2 flex items-center justify-center px-4 md:px-8">
@@ -199,19 +216,58 @@ const Register = () => {
                 <FormField
                   control={form.control}
                   name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="password"
-                          placeholder="••••••••"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  render={({ field }) => {
+                    const strength = getPasswordStrength(passwordValue);
+                    return (
+                      <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input
+                              type={showPassword ? "text" : "password"}
+                              placeholder="••••••••"
+                              {...field}
+                              onChange={e => {
+                                field.onChange(e);
+                                setPasswordValue(e.target.value);
+                              }}
+                              onFocus={() => setPasswordFocused(true)}
+                              onBlur={() => setPasswordFocused(false)}
+                            />
+                            <button
+                              type="button"
+                              tabIndex={-1}
+                              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"
+                              onClick={() => setShowPassword(v => !v)}
+                              aria-label={showPassword ? "Hide password" : "Show password"}
+                            >
+                              {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                            </button>
+                          </div>
+                        </FormControl>
+                        <FormDescription>
+                          {passwordFocused && (
+                            <span className="block font-medium text-xs text-gray-500 mt-1">
+                              Password must contain:
+                              <ul className="list-disc ml-5 mt-1">
+                                <li>At least 8 characters</li>
+                                <li>At least one uppercase letter</li>
+                                <li>At least one lowercase letter</li>
+                                <li>At least one number</li>
+                                <li>At least one special character</li>
+                              </ul>
+                            </span>
+                          )}
+                          {passwordValue && (
+                            <span className={`block mt-2 text-sm font-semibold ${strength.color}`}>
+                              Password strength: {strength.label}
+                            </span>
+                          )}
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
                 <FormField
                   control={form.control}

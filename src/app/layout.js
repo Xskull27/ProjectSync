@@ -12,7 +12,7 @@ const roboto = Roboto_Mono({
 });
 
 export const metadata = {
-  title: "ProjectSync - Project and Issue Management Tool",
+  title: "ProjectSync",
   description:
     "A simple and advanced project and issue management tool built with Next.js and Tailwind CSS",
 };

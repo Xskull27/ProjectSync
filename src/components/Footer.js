@@ -9,7 +9,7 @@ const Footer = () => {
           reserved.
         </p>
         <p className="text-xs mt-2">
-          Built with ❤️ using Next.js and Tailwind CSS
+          Built with ❤️ 
         </p>
       </div>
     </footer>
