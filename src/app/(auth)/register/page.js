@@ -3,17 +3,29 @@
 import React, { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 // Password strength checker
+// Password strength checker and detailed validation
 function getPasswordStrength(password) {
+  const requirements = {
+    length: password.length >= 8,
+    uppercase: /[A-Z]/.test(password),
+    lowercase: /[a-z]/.test(password),
+    number: /[0-9]/.test(password),
+    special: /[^A-Za-z0-9]/.test(password),
+  };
+
   let score = 0;
-  if (password.length >= 8) score++;
-  if (/[A-Z]/.test(password)) score++;
-  if (/[a-z]/.test(password)) score++;
-  if (/[0-9]/.test(password)) score++;
-  if (/[^A-Za-z0-9]/.test(password)) score++;
-  if (score <= 2) return { label: "Weak", color: "text-red-500" };
-  if (score === 3 || score === 4) return { label: "Medium", color: "text-yellow-500" };
-  if (score === 5) return { label: "Strong", color: "text-green-600" };
-  return { label: "", color: "" };
+  if (requirements.length) score++;
+  if (requirements.uppercase) score++;
+  if (requirements.lowercase) score++;
+  if (requirements.number) score++;
+  if (requirements.special) score++;
+
+  let strength = { label: "", color: "" };
+  if (score <= 2) strength = { label: "Weak", color: "text-red-500" };
+  else if (score === 3 || score === 4) strength = { label: "Medium", color: "text-yellow-500" };
+  else if (score === 5) strength = { label: "Strong", color: "text-green-600" };
+
+  return { strength, requirements };
 }
 import Link from "next/link";
 import Image from "next/image";
@@ -22,6 +34,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import register from "../../../../public/images/register.jpg";
+import { Check, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -217,15 +230,29 @@ const Register = () => {
                   control={form.control}
                   name="password"
                   render={({ field }) => {
-                    const strength = getPasswordStrength(passwordValue);
+                    const { strength, requirements } = getPasswordStrength(passwordValue);
+
+                    const RequirementItem = ({ met, text }) => {
+                      if (met) return null;
+                      return (
+                        <li className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span className="h-3 w-3 rounded-full border border-muted-foreground/40" />
+                          {text}
+                        </li>
+                      );
+                    };
+
+                    const allMet = Object.values(requirements).every(Boolean);
+
                     return (
+
                       <FormItem>
                         <FormLabel>Password</FormLabel>
                         <FormControl>
                           <div className="relative">
                             <Input
                               type={showPassword ? "text" : "password"}
-                              placeholder="••••••••"
+                              placeholder="Enter your password"
                               {...field}
                               onChange={e => {
                                 field.onChange(e);
@@ -247,16 +274,7 @@ const Register = () => {
                         </FormControl>
                         <FormDescription>
                           {passwordFocused && (
-                            <span className="block font-medium text-xs text-gray-500 mt-1">
-                              Password must contain:
-                              <ul className="list-disc ml-5 mt-1">
-                                <li>At least 8 characters</li>
-                                <li>At least one uppercase letter</li>
-                                <li>At least one lowercase letter</li>
-                                <li>At least one number</li>
-                                <li>At least one special character</li>
-                              </ul>
-                            </span>
+                            <PasswordChecklist password={passwordValue} />
                           )}
                           {passwordValue && (
                             <span className={`block mt-2 text-sm font-semibold ${strength.color}`}>
@@ -278,7 +296,7 @@ const Register = () => {
                       <FormControl>
                         <Input
                           type="password"
-                          placeholder="••••••••"
+                          placeholder="Confirm your password"
                           {...field}
                         />
                       </FormControl>
@@ -309,6 +327,54 @@ const Register = () => {
           </CardFooter>
         </Card>
       </div>
+    </div>
+  );
+};
+
+const RequirementItem = ({ met, text }) => {
+  const [visible, setVisible] = useState(true);
+
+  React.useEffect(() => {
+    if (met) {
+      const timer = setTimeout(() => {
+        setVisible(false);
+      }, 2000);
+      return () => clearTimeout(timer);
+    } else {
+      setVisible(true);
+    }
+  }, [met]);
+
+  if (!visible) return null;
+
+  return (
+    <li className={`flex items-center gap-2 text-xs ${met ? "text-green-600" : "text-muted-foreground"}`}>
+      {met ? (
+        <Check className="h-3 w-3" />
+      ) : (
+        <span className="h-3 w-3 rounded-full border border-muted-foreground/40" />
+      )}
+      {text}
+    </li>
+  );
+};
+
+const PasswordChecklist = ({ password }) => {
+  const { requirements } = getPasswordStrength(password);
+
+ 
+  return (
+    <div className="mt-2 space-y-2">
+      <span className="text-xs font-medium text-muted-foreground">
+        Password requirements:
+      </span>
+      <ul className="space-y-1">
+        <RequirementItem met={requirements.length} text="At least 8 characters" />
+        <RequirementItem met={requirements.uppercase} text="At least one uppercase letter" />
+        <RequirementItem met={requirements.lowercase} text="At least one lowercase letter" />
+        <RequirementItem met={requirements.number} text="At least one number" />
+        <RequirementItem met={requirements.special} text="At least one special character" />
+      </ul>
     </div>
   );
 };
