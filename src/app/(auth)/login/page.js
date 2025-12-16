@@ -104,7 +104,7 @@ const Login = () => {
           </div>
         </div>
       </div>
-
+//manage the error state 
       <div className="w-full md:w-1/2 flex items-center justify-center px-4 md:px-8">
         <Card className="w-full max-w-md">
           <CardHeader>
